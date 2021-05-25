@@ -676,7 +676,6 @@ def sidechain_container(seqs, backbones, atom_mask, cloud_mask=None, padding_tok
         if atom:
             new_coords[:, :, i] = predicted[:, :, cum_atom_mask[i]-1]
 
-
     # generate sidechain if not passed
     for s,seq in enumerate(seqs): 
         # format seq accordingly
