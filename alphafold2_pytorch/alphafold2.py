@@ -756,9 +756,11 @@ class CoordModuleMDS(nn.Module):
         self,
         mds_iters,
         use_eigen_mds,
-        predict_real_value_distances
+        predict_real_value_distances,
+        verbose=2
     ):
         super().__init__()
+        self.verbose = verbose
         self.mds_iters = mds_iters
         self.use_eigen_mds = use_eigen_mds
         self.predict_real_value_distances = predict_real_value_distances
@@ -796,7 +798,9 @@ class CoordModuleMDS(nn.Module):
             fix_mirror = True,
             N_mask = N_mask,
             CA_mask = CA_mask,
-            C_mask = C_mask
+            C_mask = C_mask, 
+            eigen = self.use_eigen_mds,
+            verbose = self.verbose
         )
 
         coords = rearrange(coords_3d, 'b c n -> b n c')
@@ -1451,12 +1455,15 @@ class Alphafold2(nn.Module):
         N_mask, CA_mask, C_mask = scn_backbone_mask(seq, boolean = True, n_aa = self.num_atoms)
 
         cloud_mask = scn_cloud_mask(seq, boolean = True)
-        flat_cloud_mask = rearrange(cloud_mask, 'b l c -> b (l c)')
-        chain_mask = (mask.unsqueeze(-1) * cloud_mask)
-        flat_chain_mask = rearrange(chain_mask, 'b l c -> b (l c)')
+        if mask is not None: 
+            flat_cloud_mask = rearrange(cloud_mask, 'b l c -> b (l c)')
+            chain_mask = (mask.unsqueeze(-1) * cloud_mask)
+            flat_chain_mask = rearrange(chain_mask, 'b l c -> b (l c)')
 
-        bb_flat_mask = rearrange(chain_mask[..., :self.num_atoms], 'b l c -> b (l c)')
-        bb_flat_mask_crossed = rearrange(bb_flat_mask, 'b i -> b i ()') * rearrange(bb_flat_mask, 'b j -> b () j')
+            bb_flat_mask = rearrange(chain_mask[..., :self.num_atoms], 'b l c -> b (l c)')
+            bb_flat_mask_crossed = rearrange(bb_flat_mask, 'b i -> b i ()') * rearrange(bb_flat_mask, 'b j -> b () j')
+        else: 
+            bb_flat_mask_crossed = torch.ones(seq.shape[0], *[seq.shape[1]*self.num_atoms]*2, dtype=torch.bool).to(device)
 
         coords = self.trunk_to_coords(
             seq = seq, 
