@@ -757,7 +757,7 @@ class CoordModuleMDS(nn.Module):
         mds_iters,
         use_eigen_mds,
         predict_real_value_distances,
-        verbose=2
+        verbose=0
     ):
         super().__init__()
         self.verbose = verbose

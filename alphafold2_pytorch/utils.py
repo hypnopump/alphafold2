@@ -5,8 +5,13 @@ import numpy as np
 import torch
 from functools import wraps
 from einops import rearrange, repeat
-# import torch_sparse # only needed for sparse nth_deg adj calculation
 
+# only needed for sparse nth_deg adj calculation
+try:
+    import torch_sparse
+except: 
+    pass
+     
 # bio 
 from Bio import SeqIO
 import itertools
