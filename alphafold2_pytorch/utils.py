@@ -634,8 +634,8 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
         * n: int. degree of the output adjacency
         * sparse: bool. whether to use torch-sparse module
         Outputs: 
-        * edge_idxs: ij positions of the adjacency matrix
-        * edge_attrs: degree of connectivity (1 for neighs, 2 for neighs^2, ... )
+        * edge_idxs: bool mask of ij positions of the adjacency matrix
+        * edge_attrs: mat of degree of connectivity (1 for neighs, 2 for neighs^2, ... )
     """
     adj_mat = adj_mat.float()
     attr_mat = torch.zeros_like(adj_mat)
@@ -662,12 +662,12 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
             attr_mat[new_idxs[0], new_idxs[1]] = previous
             # return adj_mat if last iter
             if i == n-1:
-                new_adj_mat = attr_mat.bool()
+                new_adj_mat = attr_mat
         else:
-            new_adj_mat = (new_adj_mat @ adj_mat).bool().float() 
-            attr_mat.masked_fill( (new_adj_mat - attr_mat.bool().float()).bool(), i+1 )
+            new_adj_mat = new_adj_mat @ adj_mat
+            attr_mat.masked_fill_( (new_adj_mat * attr_mat) > 0, i+1 )
 
-    return new_adj_mat, attr_mat
+    return new_adj_mat.bool(), attr_mat
 
 def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=False):
     """ Returns the idxs of covalent bonds for a protein.
