@@ -687,7 +687,7 @@ def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=Fal
             if len(aa_bonds) == 0: 
                 break
             # correct next position. for indexes functionality
-            next_aa = max(aa_bonds, key=lambda x: max(x))[-1]
+            next_aa = max(aa_bonds, key=lambda x: max(x))[-1]+1
             # offset by pos in chain ( intra-aa bonds + with next aa )
             bonds = next_idx + torch.tensor( aa_bonds + [[2, next_aa]] ).t()
             next_idx += next_aa
