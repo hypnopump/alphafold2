@@ -633,18 +633,13 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
         * adj_mat: (N, N) adjacency tensor
         * n: int. degree of the output adjacency
         * sparse: bool. whether to use torch-sparse module
-        Outputs: 
-        * edge_idxs: bool mask of ij positions of the adjacency matrix
-        * edge_attrs: mat of degree of connectivity (1 for neighs, 2 for neighs^2, ... )
+        Outputs: non-zero matrix where (b)ij pos is the min degree of adj
+                 between 2 points (1 for neighs, 2 for neighs of neighs, etc)
     """
     adj_mat = adj_mat.float()
-    attr_mat = torch.zeros_like(adj_mat)
     new_adj_mat = adj_mat.clone()
         
-    for i in range(n):
-        if i == 0:
-            attr_mat += adj_mat
-            continue
+    for i in range(1,n):
 
         if i == 1 and sparse and TORCH_SPARSE: 
             idxs = adj_mat.nonzero().t()
@@ -657,17 +652,14 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
             new_idxs, new_vals = torch_sparse.spspmm(new_idxs, new_vals, idxs, vals, m=m_, k=k_, n=n_)
             new_vals = new_vals.bool().float()
             # fill by indexes bc it's faster in sparse mode - will need an intersection function
-            previous = attr_mat[new_idxs[0], new_idxs[1]].bool().float().clone()
+            previous = new_adj_mat[new_idxs[0], new_idxs[1]].bool().float().clone()
             previous[previous < 1] = i+1 # only update the ones not bonded
-            attr_mat[new_idxs[0], new_idxs[1]] = previous
-            # return adj_mat if last iter
-            if i == n-1:
-                new_adj_mat = attr_mat
+            new_adj_mat[new_idxs[0], new_idxs[1]] = previous
         else:
-            new_adj_mat = new_adj_mat @ adj_mat
-            attr_mat.masked_fill_( (new_adj_mat * attr_mat) > 0, i+1 )
+            aux = new_adj_mat @ adj_mat
+            new_adj_mat.masked_fill_( (aux * new_adj_mat) > 0, i+1 )
 
-    return new_adj_mat.bool(), attr_mat
+    return new_adj_mat
 
 def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=False):
     """ Returns the idxs of covalent bonds for a protein.
@@ -707,14 +699,14 @@ def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=Fal
         # convert to undirected
         adj_mat[s] = adj_mat[s] + adj_mat[s].t()
         # do N_th degree adjacency
-        adj_mat, attr_mat = nth_deg_adjacency(adj_mat, n=adj_degree, sparse=sparse)
+        adj_mat[s] = nth_deg_adjacency(adj_mat[s], n=adj_degree, sparse=sparse)
 
     if mat: 
-        # return the full matrix/tensor
-        return attr_mat.bool().to(seqs.device), attr_mat.to(device)
+        # return the full matrix/tensor ()
+        return adj_mat.bool().to(seqs.device), adj_mat.to(device)
     else:
-        edge_idxs = attr_mat[0].nonzero().t().long()
-        edge_types = attr_mat[0, edge_idxs[0], edge_idxs[1]]
+        edge_idxs = adj_mat[0].nonzero().t().long()
+        edge_types = adj_mat[0, edge_idxs[0], edge_idxs[1]]
         return edge_idxs.to(seqs.device), edge_types.to(seqs.device)
 
 
@@ -1148,11 +1140,12 @@ def gdt_numpy(X, Y, cutoffs, weights=None):
 def tmscore_torch(X, Y):
     """ Assumes x,y are both (B x D x N). see below for wrapper. """
     L = max(15, X.shape[-1])
-    d0 = 1.24 * (L - 15)**(1/3) - 1.8
-    # get distance
+    d0 = 1.24 * (L - 15)**(1./3.) - 1.8
+    # get squared of distance
     dist = ((X - Y)**2).sum(dim=1).sqrt()
     # formula (see wrapper for source): 
-    return (1 / (1 + (dist/d0)**2)).mean(dim=-1)
+    return (1 / ( 1 + (dist/d0)**2 )).mean(dim=-1)
+
 
 def tmscore_numpy(X, Y):
     """ Assumes x,y are both (B x D x N). see below for wrapper. """
