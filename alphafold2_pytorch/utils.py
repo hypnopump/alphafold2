@@ -656,8 +656,8 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
             previous[previous < 1] = i+1 # only update the ones not bonded
             new_adj_mat[new_idxs[0], new_idxs[1]] = previous
         else:
-            aux = new_adj_mat @ adj_mat
-            new_adj_mat.masked_fill_( (aux * new_adj_mat) > 0, i+1 )
+            aux = (new_adj_mat @ adj_mat).bool().float()
+            new_adj_mat.masked_fill_( (aux - new_adj_mat) > 0, i+1 )
 
     return new_adj_mat
 
