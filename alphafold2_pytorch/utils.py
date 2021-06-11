@@ -601,7 +601,7 @@ def mat_input_to_masked(x, x_mask=None, edges_mat=None, edges=None,
         if edges_mat is not None and edges is None:
             edges = torch.nonzero(edges_mat, as_tuple=False).t()
         # get the batch identifier for each node
-        batch = torch.zeros(x.shape[0], device=x.device).to(x.device)
+        batch = torch.zeros(x.shape[0], device=x.device).to(x.device)[x_mask]
 
     # adapt edge attrs if provided
     if edge_attr_mat is not None and edge_attr is None: 
@@ -614,13 +614,18 @@ def mat_input_to_masked(x, x_mask=None, edges_mat=None, edges=None,
     x = x[x_mask]
     # process edge indexes: get square mat and remove all non-coding atoms
     max_num = edges.max().item()+1
+    # index
     wrapper = torch.zeros(max_num, max_num).to(x.device)
     wrapper[edges[0][edge_mask], edges[1][edge_mask]] = 1
     wrapper = wrapper[x_mask, :][:, x_mask]
     edge_index = torch.nonzero(wrapper, as_tuple=False).t()
     # process edge attr
-    edge_attr = edge_attr[edge_mask] if edge_attr is not None else None
-    
+    if edge_attr is not None:
+        wrapper_attr = torch.zeros(max_num, max_num, edge_attr.shape[-1]).to(x.device)
+        wrapper_attr[edges[0], edges[1]] = edge_attr 
+        wrapper_attr = wrapper_attr[x_mask, :][:, x_mask]
+        edge_attr = wrapper_attr[edge_index[0], edge_index[1]]
+
     return x, edge_index, edge_attr, batch
 
 
@@ -658,7 +663,9 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
         else:
             aux = (new_adj_mat @ adj_mat).bool().float()
             new_adj_mat.masked_fill_( (aux - new_adj_mat) > 0, i+1 )
-
+    
+    # remove diag
+    new_adj_mat.masked_fill_(torch.eye(new_adj_mat.shape[0], dtype=torch.bool), 0)
     return new_adj_mat
 
 def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=False):
