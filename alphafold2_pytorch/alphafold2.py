@@ -1554,10 +1554,14 @@ class Alphafold2(nn.Module):
 
         coords.type(original_dtype)
 
+        ret_pack = [coords]
         if self.return_aux_logits:
-            return coords, ret
+            ret_pack += [ ret ]
 
         if return_confidence:
-            return coords, self.lddt_linear(x.float())
+            ret_pack += [ self.lddt_linear(x.float()) ]
+            
+        if return_confidence or self.return_aux_logits: 
+            return ret_pack
 
         return coords
