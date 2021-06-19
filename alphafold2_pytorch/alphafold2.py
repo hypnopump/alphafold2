@@ -1034,7 +1034,8 @@ class Alphafold2(nn.Module):
         row_attn = cycle([True, False])
         col_attn = cycle([False, True])
 
-        print("Block_types", list(block_types))
+        block_types = list(block_types)
+        print("Block_types", block_types)
         print(list(block_types), [block_type for block_type in block_types])
         for block_type in list(block_types):
             print("wtf why r u runin")
