@@ -307,6 +307,7 @@ class ReversibleSequence(nn.Module):
 
         blocks = nn.ModuleList([])
 
+        print("data", input_blocks, block_types)
         for block, block_type in zip(input_blocks, block_types):
             print("wtf,", block, block_type)
             if block_type == 'self':
