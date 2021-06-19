@@ -317,6 +317,7 @@ class ReversibleSequence(nn.Module):
                 reversible_klass = ReversibleSelfAttnBlock
 
             blocks.append(reversible_klass(*block))
+            print(blocks)
 
         self.blocks = blocks
 
