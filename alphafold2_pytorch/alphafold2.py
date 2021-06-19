@@ -1035,7 +1035,8 @@ class Alphafold2(nn.Module):
         col_attn = cycle([False, True])
 
         print("Block_types", list(block_types))
-        for block_type in block_types:
+        for block_type in list(block_types):
+            print("wtf why r u runin")
             ff_tensor_slice = (slice(None), slice(0, 1))
             if block_type == 'self':
 
