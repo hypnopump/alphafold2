@@ -1096,8 +1096,10 @@ class Alphafold2(nn.Module):
             else:
                 raise ValueError(f'invalid block type ({block_type})')
 
+            print("layers, ", block_type, layers)
+
         
-        print("loooool.", layers, block_types)
+        print("loooool.", layers, list(block_types))
         trunk_class = SequentialSequence if not reversible else ReversibleSequence
         self.net = trunk_class(layers, block_types)
 
