@@ -307,18 +307,15 @@ class ReversibleSequence(nn.Module):
 
         blocks = nn.ModuleList([])
 
-        print("data", input_blocks, block_types)
         for block, block_type in zip(input_blocks, block_types):
-            print("wtf,", block, block_type)
             if block_type == 'self':
                 reversible_klass = ReversibleSelfAttnBlock
             elif block_type == 'cross':
                 reversible_klass = ReversibleCrossAttnBlock
             elif block_type == 'conv':
                 reversible_klass = ReversibleSelfAttnBlock
-
+                
             blocks.append(reversible_klass(*block))
-            print(blocks)
 
         self.blocks = blocks
 

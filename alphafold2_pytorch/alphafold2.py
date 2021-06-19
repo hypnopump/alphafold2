@@ -1034,11 +1034,8 @@ class Alphafold2(nn.Module):
         row_attn = cycle([True, False])
         col_attn = cycle([False, True])
 
-        block_types = list(block_types)
-        print("Block_types", block_types)
-        print(list(block_types), [block_type for block_type in block_types])
+        block_types = list(block_types) # lol: force list, otherwise it is wiped out
         for block_type in list(block_types):
-            print("wtf why r u runin")
             ff_tensor_slice = (slice(None), slice(0, 1))
             if block_type == 'self':
 
@@ -1099,10 +1096,7 @@ class Alphafold2(nn.Module):
             else:
                 raise ValueError(f'invalid block type ({block_type})')
 
-            print("layers, ", block_type, layers)
-
-        
-        print("loooool.", layers, list(block_types))
+                
         trunk_class = SequentialSequence if not reversible else ReversibleSequence
         self.net = trunk_class(layers, block_types)
 
