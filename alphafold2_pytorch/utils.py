@@ -719,12 +719,14 @@ def prot_covalent_bond(seqs, adj_degree=1, cloud_mask=None, mat=True, sparse=Fal
 
 # distance utils (distogram to dist mat + masking)
 
-def center_distogram_torch(distogram, bins=DISTANCE_THRESHOLDS, min_t=1., center="mean", wide="std"):
+def center_distogram_torch(distogram, bins=DISTANCE_THRESHOLDS, min_t=1., center="mean", wide="inverse"):
     """ Returns the central estimate of a distogram. Median for now.
         Inputs:
         * distogram: (batch, N, N, B) where B is the number of buckets.
         * bins: (B,) containing the cutoffs for the different buckets
         * min_t: float. lower bound for distances.
+        * center: str. strategy for centering (mean, median)
+        * wide: strategy to measure uncertainty (std, var, argmax, inverse)
         Outputs:
         * central: (batch, N, N)
         * dispersion: (batch, N, N)
@@ -756,6 +758,10 @@ def center_distogram_torch(distogram, bins=DISTANCE_THRESHOLDS, min_t=1., center
         dispersion = (distogram * (n_bins - central.unsqueeze(-1))**2).sum(dim=-1) / magnitudes
     elif wide == "std":
         dispersion = ((distogram * (n_bins - central.unsqueeze(-1))**2).sum(dim=-1) / magnitudes).sqrt()
+    elif wide == "argmax": 
+        dispersion  = torch.argmax(distogram, dim=-1)
+    elif wide == "inverse": 
+        dispersion  = central.clone()
     else:
         dispersion = torch.zeros_like(central, device=device)
     # rescale to 0-1. lower std / var  --> weight=1. set potential nan's to 0

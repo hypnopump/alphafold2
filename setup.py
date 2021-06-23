@@ -29,7 +29,7 @@ setup(
     'transformers',
     'tqdm',
     'biopython',
-    'mp-nerf>=0.1.8'
+    'mp-nerf>=0.1.11'
   ],
   setup_requires=[
     'pytest-runner',

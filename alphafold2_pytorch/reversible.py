@@ -314,7 +314,7 @@ class ReversibleSequence(nn.Module):
                 reversible_klass = ReversibleCrossAttnBlock
             elif block_type == 'conv':
                 reversible_klass = ReversibleSelfAttnBlock
-
+                
             blocks.append(reversible_klass(*block))
 
         self.blocks = blocks
