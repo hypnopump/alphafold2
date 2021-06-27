@@ -657,7 +657,7 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
             new_idxs, new_vals = torch_sparse.spspmm(new_idxs, new_vals, idxs, vals, m=m_, k=k_, n=n_)
             new_vals = new_vals.bool().float()
             # fill by indexes bc it's faster in sparse mode - will need an intersection function
-            previous = new_adj_mat[new_idxs[0], new_idxs[1]].bool().float().clone()
+            previous = new_adj_mat[new_idxs[0], new_idxs[1]].clone()
             previous[new_vals-previous > 0] = i+1 # only update the ones not bonded
             new_adj_mat[new_idxs[0], new_idxs[1]] = previous
         else:
