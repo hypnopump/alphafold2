@@ -658,7 +658,7 @@ def nth_deg_adjacency(adj_mat, n=1, sparse=False):
             new_vals = new_vals.bool().float()
             # fill by indexes bc it's faster in sparse mode - will need an intersection function
             previous = new_adj_mat[new_idxs[0], new_idxs[1]].bool().float().clone()
-            previous[previous < 1] = i+1 # only update the ones not bonded
+            previous[new_vals-previous > 0] = i+1 # only update the ones not bonded
             new_adj_mat[new_idxs[0], new_idxs[1]] = previous
         else:
             aux = (new_adj_mat @ adj_mat).bool().float()
