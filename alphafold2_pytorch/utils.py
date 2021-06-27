@@ -1107,11 +1107,11 @@ def distmat_loss_torch(X=None, Y=None, X_mat=None, Y_mat=None, p=2, q=2,
 
 def rmsd_torch(X, Y):
     """ Assumes x,y are both (B x D x N). See below for wrapper. """
-    return torch.sqrt( torch.mean((X - Y)**2, axis=(-1, -2)) )
+    return torch.sqrt( ((X - Y)**2).sum(-2).mean(-1) )
 
 def rmsd_numpy(X, Y):
     """ Assumes x,y are both (B x D x N). See below for wrapper. """
-    return np.sqrt( np.mean((X - Y)**2, axis=(-1, -2)) )
+    return np.sqrt( np.mean( ((X - Y)**2).sum(axis=-2), axis=-1) )
 
 def gdt_torch(X, Y, cutoffs, weights=None):
     """ Assumes x,y are both (B x D x N). see below for wrapper.
